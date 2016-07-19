@@ -32,7 +32,7 @@
 #define AP_MOTORS_VTAIL_FRAME       4   // Lynxmotion Hunter VTail 400/500
 #define AP_MOTORS_ATAIL_FRAME       5   // A-Shaped VTail Quads
 #define AP_MOTORS_NEW_PLUS_FRAME    10  // NEW frames are same as original 4 but with motor orders changed to be clockwise from the front
-#define AP_MOTORS_NEW_X_FRAME       11
+#define AP_MOTORS_NEW_X_FRAME       11  // asymmetric X frame used in Precision prototype v3
 #define AP_MOTORS_NEW_V_FRAME       12
 #define AP_MOTORS_NEW_H_FRAME       13   // same as X frame but motors spin in opposite direction
 
@@ -140,7 +140,6 @@ protected:
     struct AP_Motors_flags {
         uint8_t armed              : 1;    // 0 if disarmed, 1 if armed
         uint8_t stabilizing        : 1;    // 0 if not controlling attitude, 1 if controlling attitude
-        uint8_t frame_orientation  : 4;    // PLUS_FRAME 0, X_FRAME 1, V_FRAME 2, H_FRAME 3, NEW_PLUS_FRAME 10, NEW_X_FRAME, NEW_V_FRAME, NEW_H_FRAME
         uint8_t interlock          : 1;    // 1 if the motor interlock is enabled (i.e. motors run), 0 if disabled (motors don't run)
     } _flags;
 
