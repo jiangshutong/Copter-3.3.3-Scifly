@@ -1479,8 +1479,8 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
         mavlink_set_position_target_local_ned_t packet;
         mavlink_msg_set_position_target_local_ned_decode(msg, &packet);
 
-        // exit if vehicle is not in Guided mode or Auto-Guided mode
-        if ((copter.control_mode != GUIDED) && !(copter.control_mode == AUTO && copter.auto_mode == Auto_NavGuided)) {
+        // exit if vehicle is not in Guided mode or Auto-Guided mode or Loiter mode
+        if ((copter.control_mode != LOITER) && (copter.control_mode != GUIDED) && !(copter.control_mode == AUTO && copter.auto_mode == Auto_NavGuided)) {
             break;
         }
 
@@ -1526,9 +1526,28 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
 
         // prepare velocity
         Vector3f vel_vector;
+        float OA_user_input_speed_limit;
         if (!vel_ignore) {
             // convert to cm
             vel_vector = Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f);
+            OA_user_input_speed_limit = -packet.vz * 100;//set OA user input speed limit
+
+            //sanity check
+            if (OA_user_input_speed_limit < 0 || OA_user_input_speed_limit > 700)
+            {
+                OA_user_input_speed_limit = 220;//set to a strange value so that this sanity error can be observed from the log
+            }
+
+            //set saturation values for the raw OA velocity
+            if (abs(vel_vector.x) > 200)
+            {
+                vel_vector.x = 200 * vel_vector.x/abs(vel_vector.x);
+            }
+            if (abs(vel_vector.y) > 200)
+            {
+                vel_vector.y = 200 * vel_vector.y/abs(vel_vector.y);
+            }
+
             // rotate to body-frame if necessary
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED) {
                 copter.rotate_body_frame_to_NE(vel_vector.x, vel_vector.y);
@@ -1537,11 +1556,12 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
 
         // send request
         if (!pos_ignore && !vel_ignore && acc_ignore) {
-            copter.guided_set_destination_posvel(pos_vector, vel_vector);
+            //copter.guided_set_destination_posvel(pos_vector, vel_vector);
         } else if (pos_ignore && !vel_ignore && acc_ignore) {
-            copter.guided_set_velocity(vel_vector);
+            //copter.guided_set_velocity(vel_vector);
+            copter.OA_loiter(vel_vector.x, vel_vector.y, OA_user_input_speed_limit);
         } else if (!pos_ignore && vel_ignore && acc_ignore) {
-            copter.guided_set_destination(pos_vector);
+            //copter.guided_set_destination(pos_vector);
         } else {
             result = MAV_RESULT_FAILED;
         }
@@ -1556,9 +1576,11 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
         mavlink_msg_set_position_target_global_int_decode(msg, &packet);
 
         // exit if vehicle is not in Guided mode or Auto-Guided mode
-        if ((copter.control_mode != GUIDED) && !(copter.control_mode == AUTO && copter.auto_mode == Auto_NavGuided)) {
+        if ((copter.control_mode != LOITER) && (copter.control_mode != GUIDED) && !(copter.control_mode == AUTO && copter.auto_mode == Auto_NavGuided)) {
             break;
         }
+
+        copter.update_optical_flow_with_LRF_readings(packet.vx, packet.vy);//in metres
 
         // check for supported coordinate frames
         if (packet.coordinate_frame != MAV_FRAME_GLOBAL_INT &&
@@ -1577,7 +1599,7 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
          * bool yaw_ignore      = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_IGNORE;
          * bool yaw_rate_ignore = packet.type_mask & MAVLINK_SET_POS_TYPE_MASK_YAW_RATE_IGNORE;
          */
-
+/*
         Vector3f pos_ned;
 
         if(!pos_ignore) {
@@ -1604,16 +1626,17 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
         }
 
         if (!pos_ignore && !vel_ignore && acc_ignore) {
-            copter.guided_set_destination_posvel(pos_ned, Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f));
+            //copter.guided_set_destination_posvel(pos_ned, Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f));
         } else if (pos_ignore && !vel_ignore && acc_ignore) {
-            copter.guided_set_velocity(Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f));
+            //copter.guided_set_velocity(Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f));
         } else if (!pos_ignore && vel_ignore && acc_ignore) {
-            copter.guided_set_destination(pos_ned);
+            //copter.guided_set_destination(pos_ned);
         } else {
             result = MAV_RESULT_FAILED;
         }
 
         break;
+*/
     }
 
 #if HIL_MODE != HIL_MODE_DISABLED

@@ -250,6 +250,38 @@ void Copter::Log_Write_Optflow()
  #endif     // OPTFLOW == ENABLED
 }
 
+struct PACKED log_OA {
+    LOG_PACKET_HEADER;
+    uint64_t    time_us;
+    float       OA_vx;
+    float       OA_vy;
+    float       PUDV_x;
+    float       PUDV_y;
+    float       PCV_x;
+    float       PCV_y;
+    float       OA_UISL;
+};
+
+void Copter::Log_Write_OA() {
+    const Vector3f &OA_vel = pos_control.get_OA_vel();
+    const Vector3f &PUDV = pos_control.get_processed_user_desired_vel();
+    const float    &OA_user_input_speed_limit = pos_control.get_OA_user_input_speed_limit();
+    const Vector3f &PCV = pos_control.get_position_correction_vel();
+
+    struct log_OA pkt = {
+            LOG_PACKET_HEADER_INIT(LOG_OA_MSG),
+            time_us         :hal.scheduler->micros64(),
+            OA_vx           :OA_vel.x,
+            OA_vy           :OA_vel.y,
+            PUDV_x          :PUDV.x,
+            PUDV_y          :PUDV.y,
+            PCV_x           :PCV.x,
+            PCV_y           :PCV.y,
+            OA_UISL          :OA_user_input_speed_limit
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}
+
 struct PACKED log_Nav_Tuning {
     LOG_PACKET_HEADER;
     uint64_t time_us;
@@ -721,6 +753,8 @@ const struct LogStructure Copter::log_structure[] PROGMEM = {
       "ERR",   "QBB",         "TimeUS,Subsys,ECode" },
     { LOG_HELI_MSG, sizeof(log_Heli),
       "HELI",  "Qhh",         "TimeUS,DRRPM,ERRPM" },
+    { LOG_OA_MSG, sizeof(log_OA),
+      "OA",   "Qfffffff",   "TimeUS, OAVx, OAVy, PUDVx, PUDVy, PCVx, PCVy, OA_UISL" }
 };
 
 #if CLI_ENABLED == ENABLED

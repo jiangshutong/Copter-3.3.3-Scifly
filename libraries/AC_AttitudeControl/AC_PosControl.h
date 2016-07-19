@@ -216,6 +216,26 @@ public:
     ///     the desired velocities are fed forward into the rate_to_accel step
     void set_desired_velocity_xy(float vel_lat_cms, float vel_lon_cms) {_vel_desired.x = vel_lat_cms; _vel_desired.y = vel_lon_cms; }
 
+    void set_desired_OA_velocity_xy(float OA_vel_lat_cms, float OA_vel_lon_cms, float OA_user_input_speed_limit) {
+            // scale OA velocity within the limit
+            float oa_vel_total = pythagorous2(OA_vel_lat_cms, OA_vel_lon_cms);
+            if (oa_vel_total > _oa_vel_max) {
+                OA_vel_lat_cms = _oa_vel_max * _OA_vel_desired.x/oa_vel_total;
+                OA_vel_lon_cms = _oa_vel_max * _OA_vel_desired.y/oa_vel_total;
+            }
+            _OA_vel_desired.x = OA_vel_lat_cms; _OA_vel_desired.y = OA_vel_lon_cms; _OA_user_input_speed_limit = OA_user_input_speed_limit;
+        }
+
+    float& get_OA_user_input_speed_limit() { return _OA_user_input_speed_limit; }
+
+    const Vector3f& get_OA_vel() { return _OA_vel_desired; }
+
+    void set_OA_vel_max(float oa_vel_max) {_oa_vel_max = oa_vel_max;}
+
+    const Vector3f& get_processed_user_desired_vel() { return _processed_user_desired_vel; }
+
+    const Vector3f& get_position_correction_vel() { return _position_correction_vel; }
+
     /// set_desired_velocity - sets desired velocity in cm/s in all 3 axis
     ///     when update_vel_controller_xyz is next called the position target is moved based on the desired velocity
     void set_desired_velocity(const Vector3f &des_vel) { _vel_desired = des_vel; freeze_ff_xy(); }
@@ -271,7 +291,7 @@ public:
     float get_pos_xy_kP() const { return _p_pos_xy.kP(); }
 
     /// accessors for reporting
-    const Vector3f& get_vel_target() const { return _vel_target; }
+    const Vector3f& get_vel_target() const { return _vel_target; }//final FF velocity
     const Vector3f& get_accel_target() const { return _accel_target; }
 
     // lean_angles_to_accel - convert roll, pitch lean angles to lat/lon frame accelerations in cm/s/s
@@ -374,6 +394,7 @@ private:
     float       _speed_down_cms;        // max descent rate in cm/s
     float       _speed_up_cms;          // max climb rate in cm/s
     float       _speed_cms;             // max horizontal speed in cm/s
+    float       _oa_vel_max;            // max horizontal speed in cm/s for obstacle avoidance
     float       _accel_z_cms;           // max vertical acceleration in cm/s/s
     float       _accel_last_z_cms;      // max vertical acceleration in cm/s/s
     float       _accel_cms;             // max horizontal acceleration in cm/s/s
@@ -388,7 +409,11 @@ private:
     // position controller internal variables
     Vector3f    _pos_target;            // target location in cm from home
     Vector3f    _pos_error;             // error between desired and actual position in cm
-    Vector3f    _vel_desired;           // desired velocity in cm/s
+    Vector3f    _vel_desired;           // raw user desired velocity in cm/s
+    Vector3f    _OA_vel_desired;        // desired OA velocity sent from the on-board PC
+    Vector3f    _processed_user_desired_vel;// processed user desired velocity in cm/s - to be logged
+    Vector3f    _position_correction_vel;   // position correction velocity in cm/s - to be logged
+    float       _OA_user_input_speed_limit; // user input speed limit set by the obstacle avoidance controller
     Vector3f    _vel_target;            // velocity target in cm/s calculated by pos_to_rate step
     Vector3f    _vel_error;             // error between desired and actual acceleration in cm/s
     Vector3f    _vel_last;              // previous iterations velocity in cm/s

@@ -754,8 +754,21 @@ void AC_PosControl::desired_vel_to_pos(float nav_dt)
     if (_flags.reset_desired_vel_to_pos) {
         _flags.reset_desired_vel_to_pos = false;
     } else {
-        _pos_target.x += _vel_desired.x * nav_dt;
-        _pos_target.y += _vel_desired.y * nav_dt;
+        // limit the user desired velocity if obstacles are nearby
+        if (_OA_user_input_speed_limit > 0) {
+            float user_input_vel_total = pythagorous2(_vel_desired.x, _vel_desired.y);
+            if (user_input_vel_total > _OA_user_input_speed_limit) {
+                _vel_desired.x = _OA_user_input_speed_limit * _vel_desired.x/user_input_vel_total;
+                _vel_desired.y = _OA_user_input_speed_limit * _vel_desired.y/user_input_vel_total;
+            }
+        }
+
+        // store the processed user desired velocity into a different variable
+        _processed_user_desired_vel.x = _vel_desired.x;
+        _processed_user_desired_vel.y = _vel_desired.y;
+
+        _pos_target.x = (_OA_vel_desired.x + _vel_desired.x) * nav_dt + _pos_target.x;
+        _pos_target.y = (_OA_vel_desired.y + _vel_desired.y) * nav_dt + _pos_target.y;
     }
 }
 
@@ -809,21 +822,26 @@ void AC_PosControl::pos_to_rate_xy(xy_mode mode, float dt, float ekfNavVelGainSc
             // allows the pilot to always override the position correction in
             // the event of a disturbance
 
-            // scale velocity within limit
+            // scale position correction velocity within limit
             float vel_total = pythagorous2(_vel_target.x, _vel_target.y);
             if (vel_total > POSCONTROL_VEL_XY_MAX_FROM_POS_ERR) {
                 _vel_target.x = POSCONTROL_VEL_XY_MAX_FROM_POS_ERR * _vel_target.x/vel_total;
                 _vel_target.y = POSCONTROL_VEL_XY_MAX_FROM_POS_ERR * _vel_target.y/vel_total;
             }
 
-            // add velocity feed-forward
-            _vel_target.x += _vel_desired.x;
-            _vel_target.y += _vel_desired.y;
+            // store the position correction velocity into a different variable
+            _position_correction_vel.x = _vel_target.x;
+            _position_correction_vel.y = _vel_target.y;
+
+            // calculate the final velocity target by combining the processed user desired velocity, the position correction velocity, and the obstacle avoidance velocity. The sum is passed into velocity feed-forward
+            _vel_target.x = _vel_desired.x + _vel_target.x + _OA_vel_desired.x;
+            _vel_target.y = _vel_desired.y + _vel_target.y + _OA_vel_desired.y;
+
         } else {
             if (mode == XY_MODE_POS_AND_VEL_FF) {
                 // add velocity feed-forward
-                _vel_target.x += _vel_desired.x;
-                _vel_target.y += _vel_desired.y;
+                _vel_target.x = _vel_desired.x + _vel_target.x + _OA_vel_desired.x;
+                _vel_target.y = _vel_desired.y + _vel_target.y + _OA_vel_desired.y;
             }
 
             // scale velocity within speed limit

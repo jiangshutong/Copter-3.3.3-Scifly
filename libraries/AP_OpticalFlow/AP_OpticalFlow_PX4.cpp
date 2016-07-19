@@ -91,4 +91,42 @@ void AP_OpticalFlow_PX4::update(void)
     }
 }
 
+void AP_OpticalFlow_PX4::update_with_LRF_readings(float LRF_comp_x, float LRF_comp_y)
+{
+    // return immediately if not initialised
+    if (_fd == -1) {
+        return;
+    }
+
+    struct optical_flow_s report;
+    while (::read(_fd, &report, sizeof(optical_flow_s)) == sizeof(optical_flow_s) &&
+           report.timestamp != _last_timestamp) {
+        struct OpticalFlow::OpticalFlow_state state;
+        state.device_id = report.sensor_id;
+        state.surface_quality = 250;
+        if (report.integration_timespan > 0) {
+            float yawAngleRad = _yawAngleRad();
+            float cosYaw = cosf(yawAngleRad);
+            float sinYaw = sinf(yawAngleRad);
+            //const Vector2f flowScaler = _flowScaler();
+            //float flowScaleFactorX = 1.0f + 0.001f * flowScaler.x;
+            //float flowScaleFactorY = 1.0f + 0.001f * flowScaler.y;
+            float integralToRate = 1e6f / float(report.integration_timespan);
+            // rotate sensor measurements from sensor to body frame through sensor yaw angle
+
+            state.bodyRate.x = 0.0f;//integralToRate * (cosYaw * float(report.gyro_x_rate_integral) - sinYaw * float(report.gyro_y_rate_integral)); // rad/sec measured inertially about the X body axis
+            state.bodyRate.y = 0.0f;//integralToRate * (sinYaw * float(report.gyro_x_rate_integral) + cosYaw * float(report.gyro_y_rate_integral)); // rad/sec measured inertially about the Y body axis
+
+            //use the IMU angular measurements, LRF measured velocities, and height measurement to calculate equivalent flow rates as if they were observed optically
+            state.flowRate.x = -LRF_comp_y;// + state.bodyRate.x;
+            state.flowRate.y = LRF_comp_x;// + state.bodyRate.y;
+        } else {
+            state.flowRate.zero();
+            state.bodyRate.zero();
+        }
+        _last_timestamp = report.timestamp;
+        _update_frontend(state);
+    }
+}
+
 #endif // CONFIG_HAL_BOARD == HAL_BOARD_PX4

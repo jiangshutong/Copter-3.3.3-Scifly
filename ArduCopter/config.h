@@ -591,6 +591,17 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// Obstacle avoidance parameters
+//
+#ifndef OA_XY_SCALER
+ # define OA_XY_SCALER            1.0f
+#endif
+
+#ifndef OA_VEL_MAX
+ # define OA_VEL_MAX              400
+#endif
+
+//////////////////////////////////////////////////////////////////////////////
 // Stop mode defaults
 //
 #ifndef BRAKE_MODE_SPEED_Z

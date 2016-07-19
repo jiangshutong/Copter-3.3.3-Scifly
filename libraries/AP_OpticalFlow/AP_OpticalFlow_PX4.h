@@ -16,6 +16,7 @@ public:
 
     // update - read latest values from sensor and fill in x,y and totals.
     void update(void);
+    void update_with_LRF_readings(float LRF_comp_x, float LRF_comp_y);
 
 private:
     int         _fd;                // file descriptor for sensor

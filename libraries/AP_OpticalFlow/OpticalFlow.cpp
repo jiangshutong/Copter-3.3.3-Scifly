@@ -51,7 +51,8 @@ OpticalFlow::OpticalFlow(void) :
 #else
     backend(NULL),
 #endif
-    _last_update_ms(0)
+    _last_update_ms(0),
+    _last_LRF_update(0)
 {
     AP_Param::setup_object_defaults(this, var_info);
 
@@ -84,4 +85,14 @@ void OpticalFlow::setHIL(const struct OpticalFlow::OpticalFlow_state &state)
     if (backend) {
         backend->_update_frontend(state); 
     }
+}
+
+void OpticalFlow::update_with_LRF_readings(const float LRF_comp_x, const float LRF_comp_y)
+{
+    if (backend != NULL) {
+        backend->update_with_LRF_readings(LRF_comp_x, LRF_comp_y);
+    }
+    // only healthy if the data is less than 0.5s old
+    _flags.healthy = (hal.scheduler->millis() - _last_update_ms < 500);
+    _last_LRF_update = hal.scheduler->millis();
 }

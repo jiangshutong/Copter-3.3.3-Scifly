@@ -1,6 +1,6 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
-#define THISFIRMWARE "Copter V3.3.3 - QUAD - Scifly"
+#define THISFIRMWARE "Copter V3.3.3 - Scifly (QUAD)"
 #define FIRMWARE_VERSION 3,3,3,FIRMWARE_VERSION_TYPE_OFFICIAL
 
 /*
@@ -608,6 +608,7 @@ private:
     void Log_Write_AutoTuneDetails(float angle_cd, float rate_cds);
     void Log_Write_Current();
     void Log_Write_Optflow();
+    void Log_Write_OA();
     void Log_Write_Nav_Tuning();
     void Log_Write_Control_Tuning();
     void Log_Write_Performance();
@@ -750,6 +751,7 @@ private:
     bool landing_with_GPS();
     bool loiter_init(bool ignore_checks);
     void loiter_run();
+    void OA_loiter(float OA_vel_x, float OA_vel_y, float OA_user_input_speed_limit);
     bool poshold_init(bool ignore_checks);
     void poshold_run();
     void poshold_update_pilot_lean_angle(float &lean_angle_filtered, float &lean_angle_raw);
@@ -871,6 +873,7 @@ private:
     int16_t read_sonar(void);
     void init_compass();
     void init_optflow();
+    void update_optical_flow_with_LRF_readings(float LRF_body_x, float LRF_body_y);
     void update_optical_flow(void);
     void read_battery(void);
     void read_receiver_rssi(void);
@@ -964,6 +967,7 @@ private:
     void log_init(void);
     void run_cli(AP_HAL::UARTDriver *port);
     void init_capabilities(void);
+    void flow_led_control();
 
 public:
     void mavlink_delay_cb();

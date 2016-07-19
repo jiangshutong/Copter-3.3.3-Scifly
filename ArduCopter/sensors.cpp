@@ -108,6 +108,20 @@ void Copter::init_optflow()
 #endif      // OPTFLOW == ENABLED
 }
 
+#if OPTFLOW == ENABLED
+void Copter::update_optical_flow_with_LRF_readings(float LRF_body_x_vel_m, float LRF_body_y_vel_m)//30Hz?
+{
+    if (!optflow.enabled()){// WARNING: IT IS NOT SAFE TO USE THIS FUNCTION AT THE MOMENT. TODO: ALSO NEED TO ACCOUNT FOR THE CASE WHERE A HEIGHT SENSOR IS NOT AVAILABLE
+        return;
+    }
+    float temp_alt_m = sonar.distance_cm() / 100.f;
+
+    if ((abs(LRF_body_x_vel_m)) < 5 && (abs(LRF_body_y_vel_m)) < 5 && (temp_alt_m > 0.2) && (temp_alt_m < 35)){
+        optflow.update_with_LRF_readings(LRF_body_x_vel_m / temp_alt_m, LRF_body_y_vel_m / temp_alt_m);
+    }
+}
+#endif
+
 // called at 200hz
 #if OPTFLOW == ENABLED
 void Copter::update_optical_flow(void)
@@ -119,8 +133,11 @@ void Copter::update_optical_flow(void)
         return;
     }
 
-    // read from sensor
-    optflow.update();
+    // read from the optical flow sensor if there is no LRF velocity measurement for 200ms
+    if ((hal.scheduler->millis() - optflow.get_last_LRF_update() > 200) || optflow.get_last_LRF_update() == 0 )
+    {
+        optflow.update();
+    }
 
     // write to log and send to EKF if new data has arrived
     if (optflow.last_update() != last_of_update) {

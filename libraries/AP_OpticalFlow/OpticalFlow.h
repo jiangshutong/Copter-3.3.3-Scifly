@@ -60,6 +60,8 @@ public:
     // last_update() - returns system time of last sensor update
     uint32_t last_update() const { return _last_update_ms; }
 
+    uint32_t get_last_LRF_update() const { return _last_LRF_update; }
+
     // parameter var info table
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -72,6 +74,8 @@ public:
 
     // support for HIL/SITL
     void setHIL(const struct OpticalFlow_state &state);
+
+    void update_with_LRF_readings(const float LRF_comp_x, const float LRF_comp_y);
 
 private:
     OpticalFlow_backend *backend;
@@ -91,6 +95,7 @@ private:
     struct OpticalFlow_state _state;
 
     uint32_t _last_update_ms;        // millis() time of last update
+    uint32_t _last_LRF_update;
 };
 
 #include "OpticalFlow_backend.h"

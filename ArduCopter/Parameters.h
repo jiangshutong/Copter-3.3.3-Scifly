@@ -345,6 +345,12 @@ public:
         k_param_rpm_sensor,
         k_param_autotune_min_d, // 251
 
+        //
+        // 252: obstacle avoidance
+        //
+        k_param_oa_xy_scaler = 252,
+        k_param_oa_vel_max,
+
         // 254,255: reserved
     };
 
@@ -505,6 +511,10 @@ public:
     AP_Int8                 autotune_axis_bitmask;
     AP_Float                autotune_aggressiveness;
     AP_Float                autotune_min_d;
+
+    // OA parameters
+    AP_Float                oa_xy_scaler;
+    AP_Float                oa_vel_max;
 
     // Note: keep initializers here in the same order as they are declared
     // above.

@@ -157,6 +157,8 @@ void Copter::setup()
 {
     cliSerial = hal.console;
 
+    hal.rcout->enable_ch(6);//initialize main output channel 7 for optical flow LED control
+
     // Load the default values of variables listed in var_info[]s
     AP_Param::setup_sketch_defaults();
 
@@ -504,6 +506,8 @@ void Copter::one_hz_loop()
 
     // enable/disable raw gyro/accel logging
     ins.set_raw_logging(should_log(MASK_LOG_IMU_RAW));
+
+    flow_led_control();//calls the control function of the LED for the optical flow sensor
 }
 
 // called at 50hz
@@ -629,6 +633,20 @@ void Copter::update_altitude()
     // write altitude info to dataflash logs
     if (should_log(MASK_LOG_CTUN)) {
         Log_Write_Control_Tuning();
+    }
+}
+
+void Copter::flow_led_control()
+{
+    uint16_t temp = hal.rcin->read(6);//read pwm value from channel 7
+
+    if (temp > 1800)
+    {
+        hal.rcout->write(6, 20000);//turn optical flow LED on
+    }
+    else
+    {
+        hal.rcout->write(6, 0);//turn it off
     }
 }
 

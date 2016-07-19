@@ -22,7 +22,7 @@ bool Copter::loiter_init(bool ignore_checks)
         // set target to current position
         wp_nav.init_loiter_target();
 
-        // initialize vertical speed and accelerationj
+        // initialize vertical speed and acceleration
         pos_control.set_speed_z(-g.pilot_velocity_z_max, g.pilot_velocity_z_max);
         pos_control.set_accel_z(g.pilot_accel_z);
 
@@ -30,10 +30,18 @@ bool Copter::loiter_init(bool ignore_checks)
         pos_control.set_alt_target(inertial_nav.get_altitude());
         pos_control.set_desired_velocity_z(inertial_nav.get_velocity_z());
 
+        // initialise horizontal obstacle avoidance speed limit
+        pos_control.set_OA_vel_max(g.oa_vel_max);
+
         return true;
     }else{
         return false;
     }
+}
+
+void Copter::OA_loiter(float OA_vel_x, float OA_vel_y, float OA_user_input_speed_limit)
+{
+    pos_control.set_desired_OA_velocity_xy(OA_vel_x * g.oa_xy_scaler, OA_vel_y * g.oa_xy_scaler, OA_user_input_speed_limit);
 }
 
 // loiter_run - runs the loiter controller

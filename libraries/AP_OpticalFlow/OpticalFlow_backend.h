@@ -35,6 +35,8 @@ public:
     // read latest values from sensor and fill in x,y and totals.
     virtual void update() = 0;
 
+    virtual void update_with_LRF_readings(float LRF_comp_x, float LRF_comp_y) = 0;
+
 protected:
     // access to frontend
     OpticalFlow &frontend;

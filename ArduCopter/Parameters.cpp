@@ -1076,6 +1076,20 @@ const AP_Param::Info Copter::var_info[] PROGMEM = {
     // @User: Standard
     GSCALAR(autotune_min_d, "AUTOTUNE_MIN_D", 0.004f),
 
+    // @Param: OA_XY_SCALER
+    // @DisplayName: P Gain for Obstacle Avoidance
+    // @Description: Scales the OA velocity from the onboard PC, higher value means the craft react to obstacles at a farther distance
+    // @Range: 0 2
+    // @user: Advanced
+    GSCALAR(oa_xy_scaler,    "OA_XY_SCALER",  OA_XY_SCALER),
+
+    // @Param: OA_VEL_MAX
+    // @DisplayName: Maximum obstacle avoidance velocity
+    // @Description:
+    // @Range: 0 1000
+    // @user: Advanced
+    GSCALAR(oa_vel_max,      "OA_VEL_MAX",      OA_VEL_MAX),
+
     AP_VAREND
 };
 
