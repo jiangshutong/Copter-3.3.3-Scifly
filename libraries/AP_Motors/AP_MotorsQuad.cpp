@@ -88,11 +88,11 @@ void AP_MotorsQuad::setup_motors()
         add_motor(AP_MOTORS_MOT_2, 0, -160, AP_MOTORS_MATRIX_YAW_FACTOR_CCW, 3);
         add_motor(AP_MOTORS_MOT_3, -60, -60, 0, 4);
         add_motor(AP_MOTORS_MOT_4, 0, 160, AP_MOTORS_MATRIX_YAW_FACTOR_CW, 2);
-    } else if (_flags.frame_orientation == AP_MOTORS_NEW_X_FRAME) { //the frame used in Precision prototype v3
-        add_motor_raw(AP_MOTORS_MOT_1,  -0.943997f,   0.943976f,   0.943986f,   1);// at 52.13 degrees, arm length 362.11 mm
-        add_motor_raw(AP_MOTORS_MOT_2,  1.0f,       -1.0f,       1,         3);// at -127.87 degrees, arm length 322.68 mm
-        add_motor_raw(AP_MOTORS_MOT_3,  0.943997f,    0.943976f,   -0.943986f,   4);// at -52.13 degrees, arm length 362.11 mm
-        add_motor_raw(AP_MOTORS_MOT_4,  -1.0f,      -1.0f,       -1,         2);// at 127.87 degrees, arm length 322.68 mm
+    } else if (_flags.frame_orientation == AP_MOTORS_NEW_X_FRAME) { //the frame used in Precision prototype v3.1
+        add_motor_raw(AP_MOTORS_MOT_1,  -1.0f,         1.0f,        0.891f,     1);
+        add_motor_raw(AP_MOTORS_MOT_2,  0.998f,       -1.0f,        1,          3);
+        add_motor_raw(AP_MOTORS_MOT_3,  1.0f,          1.0f,        -0.891f,    4);
+        add_motor_raw(AP_MOTORS_MOT_4,  -0.998f,      -1.0f,        -1,         2);
     }else{
         // conventional X frame set-up
         add_motor(AP_MOTORS_MOT_1,   45, AP_MOTORS_MATRIX_YAW_FACTOR_CCW, 1);
