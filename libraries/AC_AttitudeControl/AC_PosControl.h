@@ -216,15 +216,8 @@ public:
     ///     the desired velocities are fed forward into the rate_to_accel step
     void set_desired_velocity_xy(float vel_lat_cms, float vel_lon_cms) {_vel_desired.x = vel_lat_cms; _vel_desired.y = vel_lon_cms; }
 
-    void set_desired_OA_velocity_xy(float OA_vel_lat_cms, float OA_vel_lon_cms, float OA_user_input_speed_limit) {
-            // scale OA velocity within the limit
-            float oa_vel_total = pythagorous2(OA_vel_lat_cms, OA_vel_lon_cms);
-            if (oa_vel_total > _oa_vel_max) {
-                OA_vel_lat_cms = _oa_vel_max * _OA_vel_desired.x/oa_vel_total;
-                OA_vel_lon_cms = _oa_vel_max * _OA_vel_desired.y/oa_vel_total;
-            }
-            _OA_vel_desired.x = OA_vel_lat_cms; _OA_vel_desired.y = OA_vel_lon_cms; _OA_user_input_speed_limit = OA_user_input_speed_limit;
-        }
+    /// set_desired_OA_velocity_xy - sets the desired obstacle avoidance velocity from the on-board PC in cm/s in lat and lon direction
+    void set_desired_OA_velocity_xy(float OA_vel_lat_cms, float OA_vel_lon_cms, float OA_user_input_speed_limit);
 
     float& get_OA_user_input_speed_limit() { return _OA_user_input_speed_limit; }
 
@@ -390,6 +383,7 @@ private:
     float       _dt_xy;                 // time difference (in seconds) between update_xy_controller and update_vel_controller_xyz calls
     uint32_t    _last_update_xy_ms;     // system time of last update_xy_controller call
     uint32_t    _last_update_z_ms;      // system time of last update_z_controller call
+    uint32_t	_last_OA_vel_ms;		// system time of last obstacle avoidance velocity command from on-board PC
     float       _throttle_hover;        // estimated throttle required to maintain a level hover
     float       _speed_down_cms;        // max descent rate in cm/s
     float       _speed_up_cms;          // max climb rate in cm/s

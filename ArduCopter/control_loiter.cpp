@@ -41,6 +41,7 @@ bool Copter::loiter_init(bool ignore_checks)
 
 void Copter::OA_loiter(float OA_vel_x, float OA_vel_y, float OA_user_input_speed_limit)
 {
+	//scale the raw OA velocity and pass it to the position controller
     pos_control.set_desired_OA_velocity_xy(OA_vel_x * g.oa_xy_scaler, OA_vel_y * g.oa_xy_scaler, OA_user_input_speed_limit);
 }
 

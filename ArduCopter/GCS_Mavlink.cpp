@@ -1525,32 +1525,29 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
         }
 
         // prepare velocity
-        Vector3f vel_vector;
+        Vector3f raw_OA_vel_vector;
         float OA_user_input_speed_limit;
         if (!vel_ignore) {
             // convert to cm
-            vel_vector = Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f);
+            raw_OA_vel_vector = Vector3f(packet.vx * 100.0f, packet.vy * 100.0f, -packet.vz * 100.0f);
             OA_user_input_speed_limit = -packet.vz * 100;//set OA user input speed limit
 
             //sanity check
-            if (OA_user_input_speed_limit < 0 || OA_user_input_speed_limit > 700)
+            if (OA_user_input_speed_limit < 0.5f || OA_user_input_speed_limit > 700)
             {
                 OA_user_input_speed_limit = 220;//set to a strange value so that this sanity error can be observed from the log
             }
 
-            //set saturation values for the raw OA velocity
-            if (abs(vel_vector.x) > 200)
-            {
-                vel_vector.x = 200 * vel_vector.x/abs(vel_vector.x);
-            }
-            if (abs(vel_vector.y) > 200)
-            {
-                vel_vector.y = 200 * vel_vector.y/abs(vel_vector.y);
+            //limit raw OA velocity
+            float raw_OA_vel_magnitude = pythagorous2(raw_OA_vel_vector.x, raw_OA_vel_vector.y);
+            if (raw_OA_vel_magnitude > 200) {
+                raw_OA_vel_vector.x = 200.0f * raw_OA_vel_vector.x/raw_OA_vel_magnitude;
+                raw_OA_vel_vector.y = 200.0f * raw_OA_vel_vector.y/raw_OA_vel_magnitude;
             }
 
             // rotate to body-frame if necessary
             if (packet.coordinate_frame == MAV_FRAME_BODY_NED || packet.coordinate_frame == MAV_FRAME_BODY_OFFSET_NED) {
-                copter.rotate_body_frame_to_NE(vel_vector.x, vel_vector.y);
+                copter.rotate_body_frame_to_NE(raw_OA_vel_vector.x, raw_OA_vel_vector.y);
             }
         }
 
@@ -1559,7 +1556,7 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
             //copter.guided_set_destination_posvel(pos_vector, vel_vector);
         } else if (pos_ignore && !vel_ignore && acc_ignore) {
             //copter.guided_set_velocity(vel_vector);
-            copter.OA_loiter(vel_vector.x, vel_vector.y, OA_user_input_speed_limit);
+            copter.OA_loiter(raw_OA_vel_vector.x, raw_OA_vel_vector.y, OA_user_input_speed_limit);
         } else if (!pos_ignore && vel_ignore && acc_ignore) {
             //copter.guided_set_destination(pos_vector);
         } else {
