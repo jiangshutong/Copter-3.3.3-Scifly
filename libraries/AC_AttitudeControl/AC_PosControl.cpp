@@ -542,13 +542,14 @@ void AC_PosControl::set_target_to_stopping_point_xy()
 }
 
 void AC_PosControl::set_desired_OA_velocity_xy(float OA_vel_lat_cms, float OA_vel_lon_cms, float OA_user_input_speed_limit) {
-	// scale OA velocity within the limit
+	// scale OA velocity within the limit according to the parameter set by the user
     float oa_vel_total = pythagorous2(OA_vel_lat_cms, OA_vel_lon_cms);
     if (oa_vel_total > _oa_vel_max) {
-    	OA_vel_lat_cms = _oa_vel_max * _OA_vel_desired.x/oa_vel_total;
-        OA_vel_lon_cms = _oa_vel_max * _OA_vel_desired.y/oa_vel_total;
+    	OA_vel_lat_cms = _oa_vel_max * OA_vel_lat_cms/oa_vel_total;
+        OA_vel_lon_cms = _oa_vel_max * OA_vel_lon_cms/oa_vel_total;
     }
     _OA_vel_desired.x = OA_vel_lat_cms; _OA_vel_desired.y = OA_vel_lon_cms; _OA_user_input_speed_limit = OA_user_input_speed_limit;
+    // record the time of the latest obstacle avoidance information update
     _last_OA_vel_ms = hal.scheduler->millis();
 }
 
@@ -767,7 +768,7 @@ void AC_PosControl::desired_vel_to_pos(float nav_dt)
         _flags.reset_desired_vel_to_pos = false;
     } else {
         // limit the user desired velocity according to the command from the on-board PC, if the command is still fresh
-        if ((hal.scheduler->millis() - _last_OA_vel_ms) < 1000) {
+        if ((hal.scheduler->millis() - _last_OA_vel_ms) < 1000 && _OA_user_input_speed_limit > 0) {
             float user_input_vel_total = pythagorous2(_vel_desired.x, _vel_desired.y);
             if (user_input_vel_total > _OA_user_input_speed_limit) {
                 _vel_desired.x = _OA_user_input_speed_limit * _vel_desired.x/user_input_vel_total;

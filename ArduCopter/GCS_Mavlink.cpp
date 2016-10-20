@@ -1533,9 +1533,9 @@ void GCS_MAVLINK::handleMessage(mavlink_message_t* msg)
             OA_user_input_speed_limit = -packet.vz * 100;//set OA user input speed limit
 
             //sanity check
-            if (OA_user_input_speed_limit < 0.5f || OA_user_input_speed_limit > 700)
+            if (OA_user_input_speed_limit < 0 || OA_user_input_speed_limit > 700)
             {
-                OA_user_input_speed_limit = 220;//set to a strange value so that this sanity error can be observed from the log
+                OA_user_input_speed_limit = -1;//set to a strange value so that this sanity error can be observed from the log
             }
 
             //limit raw OA velocity
